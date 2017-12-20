@@ -7,9 +7,9 @@
     <string name="add_to_wishlist">Add to Wishlist</string>
     <string name="name">Name</string>
     <string name="summary">Summary</string>
-    <string name="release_date">Release Date</string>
-    <string name="rating">Rating</string>
-    <string name="esrb">ESRB</string>
+    <string name="release_date">Release Date: </string>
+    <string name="rating">Rating: </string>
+    <string name="esrb">ESRB: </string>
     <string name="added_to_collection">Added To Collection</string>
     <string name="game_name">Game Name</string>
     <string name="score">Score:</string>
