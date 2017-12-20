@@ -2,10 +2,6 @@ package pt.ismai.a031127.gamezone.misc;
 
 import java.io.Serializable;
 
-/**
- * Created by migue on 20-Dec-17.
- */
-
 public class Game implements Serializable {
     protected String id, name;
 

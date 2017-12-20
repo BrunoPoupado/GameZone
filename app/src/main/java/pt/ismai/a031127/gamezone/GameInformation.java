@@ -2,13 +2,16 @@ package pt.ismai.a031127.gamezone;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.igdb.api_android_java.callback.onSuccessCallback;
@@ -18,19 +21,18 @@ import com.igdb.api_android_java.model.Parameters;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 
-import pt.ismai.a031127.gamezone.misc.Game;
+import pt.ismai.a031127.gamezone.misc.AdaptadorBaseDados;
 
 public class GameInformation extends Activity {
 
-    protected AsyncGenerator backgroundTask;
     protected Intent intent;
     protected String id;
-    protected ArrayList<Game> gameList;
 
     protected TextView name, summary, releaseDate, rating, esrb;
     protected Button addToFavorites, addToWishList;
@@ -39,7 +41,7 @@ public class GameInformation extends Activity {
 
     protected Activity activity;
 
-    //protected AdaptadorBaseDados adaptadorBaseDados;
+    protected AdaptadorBaseDados adaptadorBaseDados;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,15 +74,58 @@ public class GameInformation extends Activity {
             @Override
             public void onSuccess(JSONArray jsonArray) {
                 try {
-                    name.setText(jsonArray.getJSONObject(0).getString("name"));
-                    summary.setText(jsonArray.getJSONObject(0).getString("summary"));
-                    long timestamp = jsonArray.getJSONObject(0).getLong("first_release_date");
+                    final String game_id = jsonArray.getJSONObject(0).getString("id");
+                    final String nameValue = jsonArray.getJSONObject(0).getString("name");
+                    final String summaryValue = jsonArray.getJSONObject(0).getString("summary");
+                    DecimalFormat df = new DecimalFormat(".##");
+                    final String ratingValue = df.format(jsonArray.getJSONObject(0).getDouble("rating"));
+                    final String esrbValue = jsonArray.getJSONObject(0).getJSONObject("esrb").getString("rating");
+                    final long timestamp = jsonArray.getJSONObject(0).getLong("first_release_date");
+                    final String coverURLValue = jsonArray.getJSONObject(0).getJSONObject("cover").getString("url");
+                    new AsyncGenerator(cover).execute(coverURLValue);
+                    name.setText(nameValue);
+                    summary.setText(summaryValue);
                     SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
                     releaseDate.setText(releaseDate.getText() + sdf.format(new Date(timestamp)));
-                    DecimalFormat df = new DecimalFormat(".##");
-                    rating.setText(rating.getText() + df.format(jsonArray.getJSONObject(0).getDouble("rating")) + "%");
-                    esrb.setText(esrb.getText() + jsonArray.getJSONObject(0).getJSONObject("esrb").getString("rating"));
-                    Toast.makeText(activity, jsonArray.getJSONObject(0).getJSONObject("cover").getString("url"), Toast.LENGTH_SHORT).show();
+                    rating.setText(rating.getText() + ratingValue + "%");
+                    esrb.setText(esrb.getText() + esrbValue);
+
+                    SystemClock.sleep(3);
+
+                    adaptadorBaseDados = new AdaptadorBaseDados(activity).open();
+
+                    if (adaptadorBaseDados.existsFavorites(game_id)) {
+                        addToFavorites.setText("ADDED");
+                        addToFavorites.setEnabled(false);
+                        addToWishList.setEnabled(false);
+                    } else {
+                        addToFavorites.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                adaptadorBaseDados.insertData(game_id, nameValue, summaryValue, String.valueOf(timestamp), ratingValue, esrbValue, personScore.getText().toString(), coverURLValue, 1);
+                                addToFavorites.setText("ADDED");
+                                addToFavorites.setEnabled(false);
+                                addToWishList.setEnabled(false);
+                            }
+                        });
+                    }
+
+                    if (adaptadorBaseDados.existsWishList(game_id)) {
+                        addToWishList.setText("ADDED");
+                        addToWishList.setEnabled(false);
+                        addToFavorites.setEnabled(false);
+                    } else {
+                        addToWishList.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                adaptadorBaseDados.insertData(game_id, nameValue, summaryValue, String.valueOf(timestamp), ratingValue, esrbValue, personScore.getText().toString(), coverURLValue, 2);
+                                addToWishList.setText("ADDED");
+                                addToWishList.setEnabled(false);
+                                addToFavorites.setEnabled(false);
+                            }
+                        });
+                    }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -93,16 +138,32 @@ public class GameInformation extends Activity {
         });
     }
 
-    protected class AsyncGenerator extends AsyncTask<Void, Void, String> {
+    protected class AsyncGenerator extends AsyncTask<String, Void, Bitmap> {
 
-        @Override
-        protected String doInBackground(Void... voids) {
-            return null;
+        protected ImageView cover;
+
+        public AsyncGenerator(ImageView cover) {
+            this.cover = cover;
         }
 
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
+        protected Bitmap doInBackground(String... urls) {
+            String url = urls[0];
+            Bitmap coverImage = null;
+            try {
+                InputStream inputStream = new URL("http:" + url).openStream();
+                coverImage = BitmapFactory.decodeStream(inputStream);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return coverImage;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            cover.setImageBitmap(bitmap);
         }
     }
 }
