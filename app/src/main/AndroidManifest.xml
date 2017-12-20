@@ -16,6 +16,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".Search" />
+        <activity android:name=".GameInformation" />
+        <activity android:name=".WishListActivity" />
+        <activity android:name=".FavoritesActivity"></activity>
     </application>
 
 </manifest>
