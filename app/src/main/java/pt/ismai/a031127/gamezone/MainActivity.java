@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
         searchField = findViewById(R.id.searchField);
         searchButton = findViewById(R.id.searchButton);
         favoritesButton = findViewById(R.id.favoriteButton);
-        wishListButton = findViewById(R.id.wishListButton);
+        wishListButton = findViewById(R.id.wishListButtonMain);
     }
 
     @Override
